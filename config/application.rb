@@ -43,6 +43,8 @@ module KisiApiChallenge
     config.api_only = true
 
     # Configures the custom queue adapter.
-    config.active_job.queue_adapter = :pubsub
+    config.active_job.queue_adapter = ActiveJob::QueueAdapters::PubsubAdapter.new \
+        min_threads: 1,
+        max_threads: 2 * Concurrent.processor_count
   end
 end

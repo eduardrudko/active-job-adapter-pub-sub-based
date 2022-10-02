@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
+require_relative "../active_job/queue_adapters/worker"
+
 namespace(:worker) do
   desc("Run the worker")
-  task(run: :environment) do
-    # See https://googleapis.dev/ruby/google-cloud-pubsub/latest/index.html
-
-    puts("Worker starting...")
-
-    # Block, letting processing threads continue in the background
-    sleep
+  task :run, [:queue_name] => :environment do |_task, args|
+    ActiveJob::QueueAdapters::Worker.new(queue_name: args[:queue_name]).start
   end
 end
