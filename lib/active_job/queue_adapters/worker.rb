@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../logger_factory"
+require "concurrent"
 
 module ActiveJob
   module QueueAdapters
@@ -16,6 +17,7 @@ module ActiveJob
 
         subscriber = @pubsub.subscription(@queue_name).listen(threads: { callback: 16 }) do |event|
           @logger.info(LoggerFactory.worker_logs.received_message(event))
+
           run(event)
         end
 
@@ -35,11 +37,36 @@ module ActiveJob
       private
 
       def run(event)
-        ActiveJob::Base.execute JSON.parse(event.data)
-      rescue StandardError => e
-        @logger.error(LoggerFactory.worker_logs.worker_exception(e))
-      ensure
-        event.acknowledge!
+        success = false
+        begin
+          if time_to_run?(event)
+            ActiveJob::Base.execute(JSON.parse(event.data))
+            success = true
+          else
+            event.modify_ack_deadline!(remaining_time_to_run(event))
+          end
+        rescue StandardError => e
+          @logger.error(LoggerFactory.worker_logs.worker_exception(e))
+        ensure
+          if success
+            event.acknowledge!
+            @logger.info(LoggerFactory.worker_logs.event_acknowledged(event))
+          end
+        end
+      end
+
+      def enqueued_at(event)
+        timestamp = event.attributes['timestamp']
+        timestamp.nil? ? nil : Time.at(timestamp.to_f)
+      end
+
+      def remaining_time_to_run(event)
+        enqueued_at = enqueued_at(event)
+        enqueued_at ? [(enqueued_at - Time.now).to_f.ceil, 0].max : 0
+      end
+
+      def time_to_run?(event)
+        remaining_time_to_run(event).zero?
       end
     end
   end

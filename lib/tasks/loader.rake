@@ -9,7 +9,7 @@ namespace(:loader) do
     SuccessfulJob.set(wait: 1.minute).perform_later # job enqueued 1 min later
     FailedJob.perform_later # failed job enqueued now
     FailedJob.set(wait: 2.minutes).perform_later # failed job enqueued 2 min later
-
+    FailedJob.set(wait_until: Date.tomorrow.noon).perform_later
     sleep # rails serve
   end
 

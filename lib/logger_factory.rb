@@ -28,6 +28,10 @@ class LoggerFactory
       def worker_exception(exception)
         "#{exception.class} #{exception.message}"
       end
+
+      def event_acknowledged(event)
+        "Event ID: #{event.message.msg_id} has been acknowledged!"
+      end
     end
   end
 end
