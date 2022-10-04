@@ -11,7 +11,6 @@ gem("puma", "~> 5.0")
 gem("rails", "~> 6.1.4", ">= 6.1.4.4")
 gem("rubocop")
 gem("sqlite3", "~> 1.4")
-gem 'concurrent-ruby', require: 'concurrent'
 
 group(:development, :test) do
   gem("byebug", platforms: %i[mri mingw x64_mingw])

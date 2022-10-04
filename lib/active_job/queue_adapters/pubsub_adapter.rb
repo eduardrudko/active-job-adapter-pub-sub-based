@@ -1,6 +1,4 @@
 # frozen_string_literal: true
-#
-require 'concurrent'
 
 require_relative "../../logger_factory"
 
@@ -30,7 +28,7 @@ module ActiveJob
 
       class Scheduler
         def initialize(async: true, publisher: Pubsub.new, logger: LoggerFactory._initialize($stdout))
-          @executor = async ? :io : :immediate
+          @async = async
           @publisher = publisher
           @logger = logger
         end
@@ -40,14 +38,22 @@ module ActiveJob
         # @param[Hash] attributes to be passed for PubSub event
         def enqueue(job, attributes = {})
           job.provider_job_id = SecureRandom.uuid
+          topic = @publisher.topic(job.queue_name)
 
-          promise = Concurrent::Promise.execute(executor: @executor) do
-            @publisher.topic(job.queue_name).publish(JSON.dump(job.serialize), attributes)
-          end
-
-          # Any PubSub related errors will be caught here
-          promise.on_error do |e|
+          begin
+            if @async
+              topic.publish_async(JSON.dump(job.serialize), attributes) do |result|
+                unless result.succeeded?
+                  @logger.error("#{result.data}\n#{result.error}")
+                end
+              end
+            else
+              topic.publish(JSON.dump(job.serialize), attributes)
+            end
+          rescue StandardError => e
             @logger.error(e)
+          ensure
+            topic.async_publisher.stop!
           end
         end
 

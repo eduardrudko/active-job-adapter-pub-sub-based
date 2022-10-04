@@ -256,7 +256,6 @@ PLATFORMS
 
 DEPENDENCIES
   byebug
-  concurrent-ruby
   google-cloud-pubsub
   listen (~> 3.3)
   pry-rails
