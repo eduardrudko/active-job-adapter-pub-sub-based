@@ -7,6 +7,6 @@ class ApplicationJob < ActiveJob::Base
   end
 
   def logger
-    @logger ||= LoggerFactory._initialize($stdout)
+    @logger ||= ExtendedLogger.get_new($stdout)
   end
 end

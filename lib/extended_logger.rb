@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-class LoggerFactory
+class ExtendedLogger
   class << self
-    def _initialize(output = $stdout)
+    def get_new(output = $stdout)
       Logger.new(output)
     end
 
     def worker_logs
-      @worker_logs ||= Message::Worker.new
+      @worker_logs ||= Log::Worker.new
     end
 
     def adapter_logs
-      @adapter_logs ||= Message::Adapter.new
+      @adapter_logs ||= Log::Adapter.new
     end
   end
 
-  module Message
+  module Log
     class Worker
       def booting_up_worker(queue_name)
         "Booting up worker for a queue: #{queue_name}"

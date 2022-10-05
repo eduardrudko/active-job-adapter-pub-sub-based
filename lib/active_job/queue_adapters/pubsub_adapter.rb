@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../logger_factory"
+require_relative "../../extended_logger"
 
 module ActiveJob
   module QueueAdapters
@@ -27,7 +27,7 @@ module ActiveJob
       end
 
       class Scheduler
-        def initialize(async: true, publisher: Pubsub.new, logger: LoggerFactory._initialize($stdout))
+        def initialize(async: true, publisher: Pubsub.new, logger: ExtendedLogger.get_new($stdout))
           @async = async
           @publisher = publisher
           @logger = logger

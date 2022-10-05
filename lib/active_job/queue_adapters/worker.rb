@@ -1,27 +1,27 @@
 # frozen_string_literal: true
 
-require_relative "../../logger_factory"
+require_relative "../../extended_logger"
 
 module ActiveJob
   module QueueAdapters
     class Worker
-      def initialize(queue_name: "default", logger: LoggerFactory._initialize($stdout))
+      def initialize(queue_name: "default", logger: ExtendedLogger.get_new($stdout))
         @queue_name = queue_name
         @logger = logger
         @pubsub = Pubsub.new
       end
 
       def start
-        @logger.info(LoggerFactory.worker_logs.booting_up_worker(@queue_name))
+        @logger.info(ExtendedLogger.worker_logs.booting_up_worker(@queue_name))
 
         subscriber = @pubsub.subscription(@queue_name).listen(threads: { callback: 16 }) do |event|
-          @logger.info(LoggerFactory.worker_logs.received_message(event))
+          @logger.info(ExtendedLogger.worker_logs.received_message(event))
 
           run(event)
         end
 
         subscriber.on_error do |exception|
-          @logger.error(LoggerFactory.worker_logs.worker_exception(exception))
+          @logger.error(ExtendedLogger.worker_logs.worker_exception(exception))
         end
 
         begin
@@ -45,11 +45,11 @@ module ActiveJob
             event.modify_ack_deadline!(remaining_time_to_run(event))
           end
         rescue StandardError => e
-          @logger.error(LoggerFactory.worker_logs.worker_exception(e))
+          @logger.error(ExtendedLogger.worker_logs.worker_exception(e))
         ensure
           if success
             event.acknowledge!
-            @logger.info(LoggerFactory.worker_logs.event_acknowledged(event))
+            @logger.info(ExtendedLogger.worker_logs.event_acknowledged(event))
           end
         end
       end
