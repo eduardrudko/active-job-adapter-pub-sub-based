@@ -1,5 +1,3 @@
-# The Kisi Backend Code Challenge
-
 This repository can be used as a starting point for the Kisi Backend Code Challenge. Feel free to replace this `README.md` with your own when you submit your solution.
 
 This repository contains:
